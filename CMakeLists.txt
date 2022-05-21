@@ -3,6 +3,7 @@ project(media-player-test C CXX)
 set(CMAKE_CXX_STANDARD 14)
 
 add_subdirectory(lib/glfw)
+add_subdirectory(lib/ffmpeg)
 
 add_definitions(-DGL_SILENCE_DEPRECATION)
 
@@ -16,4 +17,4 @@ else()
 endif()
 
 add_executable(media-player-test src/main.cpp)
-target_link_libraries(media-player-test glfw ${EXTRA_LIBS})
+target_link_libraries(media-player-test ffmpeg glfw ${EXTRA_LIBS})
