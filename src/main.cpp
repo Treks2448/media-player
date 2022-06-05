@@ -1,31 +1,33 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 
+int loadFrame(const char* filename, int* width, int* height, unsigned char** data);
+
 int main(int argc, const char** argv) {
+	unsigned char* red_square;
+	int width;
+	int height;
+
+	if (!loadFrame("/home/igor/Videos/a.mp4", &width, &height, &red_square)) {
+	    printf("Couldn't load frame\n");
+	    return 1;
+	}
+
 	GLFWwindow* window;
 
 	if (!glfwInit()) {
-		printf("Couldn't initialize GLFW.");
+		printf("Couldn't initialize GLFW.\n");
 		return 1;
 	}
 
-	window = glfwCreateWindow(640, 480, "Hello World!", NULL, NULL);
+	window = glfwCreateWindow(width, height, "Hello World!", NULL, NULL);
 
 	if (!window) {
-		printf("Couldn't open GLFW window.");
+		printf("Couldn't open GLFW window.\n");
 		return 1;
 	}
 	
-	glfwMakeContextCurrent(window);
-	
-	unsigned char* red_square = new unsigned char[100 * 100 * 3];
-	for (int iy = 0; iy < 100; iy++) {	
-		for (int ix = 0; ix < 100; ix++) {
-			red_square[iy * 100 * 3 + ix * 3 + 0] = 0xff;
-			red_square[iy * 100 * 3 + ix * 3 + 1] = 0x00;
-			red_square[iy * 100 * 3 + ix * 3 + 2] = 0x00;
-		}
-	}
+	glfwMakeContextCurrent(window);	
 	
 	// Generate a texture handle
 	GLuint texHandle;
@@ -42,7 +44,7 @@ int main(int argc, const char** argv) {
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	// load data into the texture (handle, level, type, x-size, y-size, border, input-type, data-type, data)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 100, 100, 0, GL_RGB, GL_UNSIGNED_BYTE, red_square);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, red_square);
 		
 	while(!glfwWindowShouldClose(window)) {
 		// I guess this clears the buffer contents from the previous frame	
@@ -65,9 +67,9 @@ int main(int argc, const char** argv) {
 		glBindTexture(GL_TEXTURE_2D, texHandle);
 		glBegin(GL_QUADS);
 			glTexCoord2d(0, 0); glVertex2i(0, 0);
-			glTexCoord2d(1, 0); glVertex2i(100, 0);
-			glTexCoord2d(1, 1); glVertex2i(100, 100);
-			glTexCoord2d(0, 1); glVertex2i(0, 100);
+			glTexCoord2d(1, 0); glVertex2i(windowWidth, 0);
+			glTexCoord2d(1, 1); glVertex2i(windowWidth, windowHeight);
+			glTexCoord2d(0, 1); glVertex2i(0, windowHeight);
 		glEnd();
 		glDisable(GL_TEXTURE_2D);
 			

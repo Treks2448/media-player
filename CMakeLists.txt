@@ -16,5 +16,9 @@ else()
 	list(APPEND EXTRA_LIBS "-lGL -lGLU -lX11")
 endif()
 
-add_executable(media-player-test src/main.cpp)
-target_link_libraries(media-player-test ffmpeg glfw ${EXTRA_LIBS})
+set(GCC_COVERAGE_COMPILE_FLAGS "-g")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" "${GCC_COVERAGE_COMPILE_FLAGS}")
+add_definitions("${GCC_COVERAGE_COMPILE_FLAGS}")
+
+add_executable(media-player-test src/main.cpp src/loadFrame.cpp)
+target_link_libraries(media-player-test FFmpeg glfw ${EXTRA_LIBS})

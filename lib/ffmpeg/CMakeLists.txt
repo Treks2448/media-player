@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(ffmpeg)
+project(FFmpeg)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(AVCODEC REQUIRED IMPORTED_TARGET libavcodec)
@@ -11,9 +11,9 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 pkg_check_modules(POSTPROC REQUIRED IMPORTED_TARGET libpostproc)
 pkg_check_modules(SWSCALE REQUIRED IMPORTED_TARGET libswscale)
 
-add_library(ffmpeg INTERFACE IMPORTED GLOBAL)
+add_library(FFmpeg INTERFACE IMPORTED GLOBAL)
 target_include_directories(
-	ffmpeg INTERFACE 
+	FFmpeg INTERFACE 
 	${AVCODEC_INCLUDE_DIRS}
 	${AVFILTER_INCLUDE_DIRS}
 	${AVFORMAT_INCLUDE_DIRS}
@@ -24,8 +24,8 @@ target_include_directories(
 	${SWSCALE_INCLUDE_DIRS}
 )
 
-target_link_options(
-	ffmpeg INTERFACE
+target_link_libraries(
+	FFmpeg INTERFACE
 	${AVCODEC_LDFLAGS}
 	${AVFILTER_LDFLAGS}
 	${AVFORMAT_LDFLAGS}
