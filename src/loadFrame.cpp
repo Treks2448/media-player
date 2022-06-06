@@ -2,24 +2,10 @@ extern "C" {
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
     #include <inttypes.h>
+	#include <libswscale/swscale.h>
 }
 
-/* TODO this isn't accuraten, need to update
-In ffmpeg, the process of getting a data stream from a file goes like this:
-1.  Create a "context" that holds information about the file/file type: AVFormatContext.
-    Examples of information stored here are the various audio/video streams and metadata.
-2.  Find a stream of a certain media type, for example a video stream. The function 
-    av_find_best_stream() handles this when given an AVFormatContext and the desired media type. 
-     - The function returns a stream index which is used to access the stream within an array of
-       streams in the file.
-     - The function also optionally returns an appropriate decoder for the media type.
-3.  Create a decoder context for the stream. The context holds details about the decoder:
-    AVCodecContext.
-4.  A video file contains multiplexed data as a series of packets, for example:
-    file data:  [[video-data][audio-data][other-data]...[video-datal]...[other-data]]. If we wish
-    to, for example, extract video data, we must specifically look for video packets. We may
-    extract data such as video frames from a video packet by using the created decoder.
-*/
+
 
 bool loadFrame(const char* filename, int* width, int* height, unsigned char** data) {
     
@@ -117,22 +103,37 @@ bool loadFrame(const char* filename, int* width, int* height, unsigned char** da
 		
 		break;
     }
-   
-    // build the pixel array respective of the frame
-	// TODO: linesize may be negative in which case this part of the program crashes. 
-    unsigned char* frame_pixels = new unsigned char[frame->width * frame->height * 3];
-    for (int x = 0; x < frame->width; x++) {
-		for (int y = 0; y < frame->height; y++) {
-			frame_pixels[y * frame->width * 3 + x * 3 + 0] = frame->data[0][y * frame->linesize[0] + x];
-	    	frame_pixels[y * frame->width * 3 + x * 3 + 1] = frame->data[0][y * frame->linesize[0] + x];
-	    	frame_pixels[y * frame->width * 3 + x * 3 + 2] = frame->data[0][y * frame->linesize[0] + x];
-		}
-    }
+	
+	// Initialize scaler for converting pixel format	
+	SwsContext* scaler_ctx = sws_getContext(
+		frame->width, 
+		frame->height, 
+		decoder_context->pix_fmt, // input pixel format
+		frame->width,
+		frame->height,
+		AV_PIX_FMT_RGB0,   // output pixel format
+		SWS_BILINEAR,
+		NULL,
+		NULL,
+		NULL
+	);	
+	if (!scaler_ctx) {
+		printf("Couldn't initialize scaler context\n");
+		return false;
+	}
+	
+	// Set up new pixel format data containers
+	uint8_t* RGBA_pixels = new uint8_t[frame->width * frame->height * 4];
+	uint8_t* pix_buff[4] = {RGBA_pixels, NULL, NULL, NULL};
+	int RGBA_linesize[4] = {frame->width * 4, 0, 0, 0};
+		
+	// Process pixel format conversion	
+	sws_scale(scaler_ctx, frame->data, frame->linesize, 0, frame->height, pix_buff, RGBA_linesize);
+	sws_freeContext(scaler_ctx); 
 
-    printf("width %d, height %d\n", frame->width, frame->height); // TODO: for testing, remove later
     *width = frame->width;
     *height = frame->height;
-    *data = frame_pixels;
+    *data = RGBA_pixels;
 	    
     // close input file and clean up memory
     av_frame_free(&frame);
@@ -143,3 +144,5 @@ bool loadFrame(const char* filename, int* width, int* height, unsigned char** da
 
     return true;
 }
+
+//TODO: break up the loadFrame function into additional functions

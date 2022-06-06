@@ -44,7 +44,7 @@ int main(int argc, const char** argv) {
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	// load data into the texture (handle, level, type, x-size, y-size, border, input-type, data-type, data)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, red_square);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, red_square);
 		
 	while(!glfwWindowShouldClose(window)) {
 		// I guess this clears the buffer contents from the previous frame	
@@ -58,7 +58,8 @@ int main(int argc, const char** argv) {
 		glLoadIdentity();
 		// Sets an orthographic projection. Sets projection coordinates to fit the window 
 		// (left, right, bottom, top, nearVal, farVal)
-		glOrtho(0, windowWidth, 0, windowHeight, -1, 1);
+		// For some reason the video is up-side-down so I have swapped top and bottom
+		glOrtho(0, windowWidth, windowHeight, 0, -1, 1);
 		
 		glMatrixMode(GL_MODELVIEW); // describes how transformations occur in the coordinate space
 
