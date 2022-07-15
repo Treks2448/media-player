@@ -3,18 +3,12 @@ extern "C" {
     #include <libavformat/avformat.h>
     #include <inttypes.h>
 	#include <libswscale/swscale.h>
-}
-
-
+} 
 
 bool loadFrame(const char* filename, int* width, int* height, unsigned char** data) {
     
     // struct containing data about file format
-    AVFormatContext* format_context = avformat_alloc_context();
-    if (!format_context) {
-		printf("Couldn't create AVFormatContext\n");
-		return false;
-    }
+    AVFormatContext* format_context = avformat_alloc_context(); 
     
     // load data about file format into the context
     if (avformat_open_input(&format_context, filename, NULL, NULL) != 0) {
@@ -30,24 +24,13 @@ bool loadFrame(const char* filename, int* width, int* height, unsigned char** da
  
     // get the video stream (index)
     int stream_idx = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
-    AVStream* stream = format_context->streams[stream_idx]; 
-    if (stream_idx < 0) {
-		printf("Could not find stream of type AVMEDIA_TYPE_VIDEO\n");
-		return false;
-    }
+    AVStream* stream = format_context->streams[stream_idx];  
 
     // get the respective decoder 
-    AVCodec* video_decoder = avcodec_find_decoder(stream->codecpar->codec_id);
-    if (!video_decoder) {
-		printf("NULL video decoder");
-    }
+    AVCodec* video_decoder = avcodec_find_decoder(stream->codecpar->codec_id); 
 
     // struct containing details about decoder
-    AVCodecContext* decoder_context = avcodec_alloc_context3(video_decoder);
-    if (!decoder_context) {
-		printf("Could not allocate codec context\n");
-		return false;
-    }
+    AVCodecContext* decoder_context = avcodec_alloc_context3(video_decoder); 
 	
 	// fill decoder context with parameters relative to stream	
 	if (avcodec_parameters_to_context(decoder_context, stream->codecpar) < 0) {
@@ -63,15 +46,9 @@ bool loadFrame(const char* filename, int* width, int* height, unsigned char** da
     
     // Allocate packet and frame
     AVPacket* packet = av_packet_alloc();
-    if (!packet) {
-		printf("Couldn't allocate packet\n");
-		return false;
-    }
+    
     AVFrame* frame = av_frame_alloc();
-    if (!frame) {
-		printf("Couldn't allocate frame\n");
-		return false;
-    }
+    
 
     // read a single video frame from the file
     while (av_read_frame(format_context, packet) >= 0) {
@@ -90,8 +67,7 @@ bool loadFrame(const char* filename, int* width, int* height, unsigned char** da
 		// get a frame from the decoder
 		result = avcodec_receive_frame(decoder_context, frame);
 		if (result == AVERROR_EOF || result == AVERROR(EAGAIN)) {
-		    printf("EOF or EAGAIN\n"); 
-		    continue; // TODO: temporary, change this
+		    continue; 
 		}
 		else if (result < 0) {
 		    printf("Error during decoding\n");
@@ -106,7 +82,7 @@ bool loadFrame(const char* filename, int* width, int* height, unsigned char** da
 	
 	// Initialize scaler for converting pixel format	
 	SwsContext* scaler_ctx = sws_getContext(
-		frame->width, 
+		decoder_context->width, 
 		frame->height, 
 		decoder_context->pix_fmt, // input pixel format
 		frame->width,

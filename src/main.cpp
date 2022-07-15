@@ -1,17 +1,33 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include "AVPlayer.h"
 
 int loadFrame(const char* filename, int* width, int* height, unsigned char** data);
 
 int main(int argc, const char** argv) {
-	unsigned char* red_square;
+	unsigned char* data;
 	int width;
 	int height;
+	
+	// Allocate and initialize AVPlayer
+	AVPlayer* av_player = allocAVPlayer();	
+	AVPlayerOpen("/home/igor/Videos/a.mp4", av_player);
+	
+	// Allocate audio and video player states
+	av_player->video_state = allocAVPlayerState(AVMEDIA_TYPE_VIDEO, av_player->format_context);
+	
+	// initialize video state and load a frame
+	initAVPlayerState(av_player->video_state, av_player->format_context);
+	nextFrame(av_player->video_state, av_player->format_context);		
+	
+	data = av_player->video_state->data;
+	width = av_player->video_state->width;
+	height = av_player->video_state->height;
 
-	if (!loadFrame("/home/igor/Videos/a.mp4", &width, &height, &red_square)) {
-	    printf("Couldn't load frame\n");
-	    return 1;
-	}
+	//if (!loadFrame("/home/igor/Videos/a.mp4", &width, &height, &data)) {
+	//    printf("Couldn't load frame\n");
+	//    return 1;
+	//}
 
 	GLFWwindow* window;
 
@@ -44,7 +60,7 @@ int main(int argc, const char** argv) {
 	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 	// load data into the texture (handle, level, type, x-size, y-size, border, input-type, data-type, data)
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, red_square);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 		
 	while(!glfwWindowShouldClose(window)) {
 		// I guess this clears the buffer contents from the previous frame	
@@ -73,13 +89,20 @@ int main(int argc, const char** argv) {
 			glTexCoord2d(0, 1); glVertex2i(0, windowHeight);
 		glEnd();
 		glDisable(GL_TEXTURE_2D);
-			
-
+				
 		// swap the back buffer with the front buffer so that it is rendered on screen
 		glfwSwapBuffers(window);	
-			
-		glfwWaitEvents();
+	
+		// load the next frame	
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		nextFrame(av_player->video_state, av_player->format_context);
+
+		glfwPollEvents();	
 	}
+	
+	AVPlayerClose(av_player);
+	freeAVPlayer(av_player);	
+	av_player = NULL;
 
 	return 0;
 }
